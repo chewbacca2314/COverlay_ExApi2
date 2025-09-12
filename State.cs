@@ -103,6 +103,11 @@ namespace cOverlay
         public bool ToggleGemling = true;
         public bool ToggleCorruptedMaps = true;
         public bool ToggleCorruptedNexus = true;
+        public bool ToggleSealedVault = true;
+        public bool ToggleJadeIsles = true;
+        public bool ToggleCastaway = true;
+        public bool ToggleCitadel = true;
+        public bool ToggleSilentCave = true;
         public Color GemlingColor = Color.Orange;
         public int ContentCircleThickness = 2;
         public int GapRadius = 5;

@@ -96,6 +96,11 @@ namespace cOverlay
             ImGui.SeparatorText("Area text settings");
             ImGui.Checkbox("Enable corrupted maps counter (-1 of high towers amount)", ref state.ToggleCorruptedMaps);
             ImGui.Checkbox("Show Corrupted Nexus", ref state.ToggleCorruptedNexus);
+            ImGui.Checkbox("Show Sealed Vault", ref state.ToggleSealedVault);
+            ImGui.Checkbox("Show Jade Isles", ref state.ToggleJadeIsles);
+            ImGui.Checkbox("Show Castaway", ref state.ToggleCastaway);
+            ImGui.Checkbox("Show Citadel", ref state.ToggleCitadel);
+            ImGui.Checkbox("Show Silent Cave", ref state.ToggleSilentCave);
             ImGui.Checkbox("Show all map content (ignore tower treshold)", ref state.ShowAllMapContent);
             ImGui.Checkbox("Recolor high towers amount", ref state.RecolorHighTowersAmount);
             ImGui.Checkbox("Draw towers range", ref state.DrawTowerRange);

@@ -237,12 +237,64 @@ namespace cOverlay
                     var node = nodeObject.NodeObject.Element;
                     if (!IsTower(node))
                     {
+                        int textOffset = -30; //Draws text above the node to avoid overlapping
+                        
                         if (IsCorruptedNexus(nodeObject.NodeObject.Element) && state.ToggleCorruptedNexus)
                         {
-                            Graphics.DrawTextWithBackground("Corrupted Nexus", new Vector2(node.Center.X, node.Center.Y - 30), Color.Red, ExileCore2.Shared.Enums.FontAlign.Center | ExileCore2.Shared.Enums.FontAlign.VerticalCenter, Color.Black);
+                            Graphics.DrawTextWithBackground("Corrupted Nexus", 
+                                new Vector2(node.Center.X, node.Center.Y + textOffset), 
+                                Color.Red, 
+                                ExileCore2.Shared.Enums.FontAlign.Center | ExileCore2.Shared.Enums.FontAlign.VerticalCenter, 
+                                Color.Black);
                         }
+
+                        if (IsSealedVault(node))
+                        {
+                            Graphics.DrawTextWithBackground("** Sealed Vault **", 
+                                new Vector2(node.Center.X, node.Center.Y + textOffset), 
+                                Color.Gold, 
+                                ExileCore2.Shared.Enums.FontAlign.Center | ExileCore2.Shared.Enums.FontAlign.VerticalCenter, 
+                                Color.Black);
+                        }
+
+                        if (IsJadeIsles(node))
+                        {
+                            Graphics.DrawTextWithBackground("** Jade Isles **", 
+                                new Vector2(node.Center.X, node.Center.Y + textOffset), 
+                                Color.Green, 
+                                ExileCore2.Shared.Enums.FontAlign.Center | ExileCore2.Shared.Enums.FontAlign.VerticalCenter, 
+                                Color.Black);
+                        }
+
+                        if (IsCastaway(node))
+                        {
+                            Graphics.DrawTextWithBackground("** Castaway **", 
+                                new Vector2(node.Center.X, node.Center.Y + textOffset), 
+                                Color.Cyan, 
+                                ExileCore2.Shared.Enums.FontAlign.Center | ExileCore2.Shared.Enums.FontAlign.VerticalCenter, 
+                                Color.Black);
+                        }
+
+                        if (IsCitadel(node))
+                        {
+                            Graphics.DrawTextWithBackground("** Citadel **", 
+                                new Vector2(node.Center.X, node.Center.Y + textOffset), 
+                                Color.Purple, 
+                                ExileCore2.Shared.Enums.FontAlign.Center | ExileCore2.Shared.Enums.FontAlign.VerticalCenter, 
+                                Color.Black);
+                        }
+
+                        if (IsSilentCave(node))
+                        {
+                            Graphics.DrawTextWithBackground("** Silent Cave **", 
+                                new Vector2(node.Center.X, node.Center.Y + textOffset), 
+                                Color.DarkSlateGray, 
+                                ExileCore2.Shared.Enums.FontAlign.Center | ExileCore2.Shared.Enums.FontAlign.VerticalCenter, 
+                                Color.White);
+                        }
+                        
                         if ((nodeObject.TowersCount >= state.HighTowerAmountThreshold ||
-                            (IsCleansed(nodeObject.NodeObject.Element) || // This should work now
+                            (IsCleansed(nodeObject.NodeObject.Element) || 
                             nodeObject.NodeObject.Element.IsCorrupted)
                             && nodeObject.TowersCount >= state.HighTowerAmountThreshold - 1
                             && state.ToggleCorruptedMaps)
@@ -260,8 +312,6 @@ namespace cOverlay
                             }
                             DrawNodeTrash(node);
                         }
-
-                        //DrawNodeTower(nodeObject);
                     }
                     else
                     {
@@ -520,6 +570,30 @@ namespace cOverlay
                 LogError($"Error checking for Corrupted Nexus");
             }
             return false;
+        }
+        public bool IsSealedVault(AtlasPanelNode node)
+        {
+            return state.ToggleSealedVault && node.Area.Name.Contains("Sealed Vault");
+        }
+
+        public bool IsJadeIsles(AtlasPanelNode node)
+        {
+            return state.ToggleJadeIsles && node.Area.Name.Contains("Jade Isles");
+        }
+
+        public bool IsCastaway(AtlasPanelNode node)
+        {
+            return state.ToggleCastaway && node.Area.Name.Contains("Castaway");
+        }
+
+        public bool IsCitadel(AtlasPanelNode node)
+        {
+            return state.ToggleCitadel && node.Area.Name.Contains("Citadel");
+        }
+
+        public bool IsSilentCave(AtlasPanelNode node)
+        {
+            return state.ToggleSilentCave && node.Area.Name.Contains("The Silent Cave");
         }
         public void DrawConnections(Node node)
         {
