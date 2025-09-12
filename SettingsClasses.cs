@@ -37,7 +37,8 @@ namespace cOverlay
             "Expedition",
             "Irradiated",
             "Map Boss",
-            "Delirium"
+            "Delirium",
+            "Corrupted Nexus"
         };
     }
 

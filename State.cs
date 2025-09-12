@@ -61,6 +61,7 @@ namespace cOverlay
         public bool drawConnections = false;
         public bool RecolorHighTowersAmount = false;
         public bool DrawTowerRange = false;
+        public bool ShowAllMapContent = false;
 
         // Colors
 
@@ -75,7 +76,7 @@ namespace cOverlay
 
         // Style settings
 
-        public int HighTowerAmountThreshold = 5;
+        public int HighTowerAmountThreshold = 2;
         public Vector2 paddingName = new Vector2(3, 2);
         public int ConnectionsThickness = 2;
         public int nodeTextRounding = 3;
@@ -92,8 +93,8 @@ namespace cOverlay
 
         // General Settings
 
-        public int borderX = 2400;
-        public int borderY = 1300;
+        public int borderX = 1920;
+        public int borderY = 1080;
         public int atlasRefreshRate = 10000;
         public int screnRefreshRate = 1000;
 
@@ -101,6 +102,7 @@ namespace cOverlay
 
         public bool ToggleGemling = true;
         public bool ToggleCorruptedMaps = true;
+        public bool ToggleCorruptedNexus = true;
         public Color GemlingColor = Color.Orange;
         public int ContentCircleThickness = 2;
         public int GapRadius = 5;
@@ -128,47 +130,75 @@ namespace cOverlay
 
         public void Load()
         {
-            if (File.Exists(Path.Combine(settingsPath, "StateSettings.json")))
+            string settingsFilePath = Path.Combine(settingsPath, "StateSettings.json");
+
+            if (File.Exists(settingsFilePath))
             {
                 var config = new MapperConfiguration(cfg => cfg.CreateMap<State, State>());
                 var mapper = config.CreateMapper();
 
-                var obj = SerializationApi.Deserialize<State>(Path.Combine(settingsPath, "StateSettings.json"));
+                var obj = SerializationApi.Deserialize<State>(settingsFilePath);
                 if (obj != null)
                 {
                     mapper.Map(obj, this);
                     NodeColors = obj.NodeColors.OrderBy(x => x.Key).ToDictionary<string, Color>();
                     NameColors = obj.NameColors.OrderBy(x => x.Key).ToDictionary<string, Color>();
+
+                    ContentToggle = obj.ContentToggle ?? new Dictionary<string, bool>();
+                    ContentCircleColor = obj.ContentCircleColor ?? new Dictionary<string, Color>();
+
+                    foreach (var contentType in Content.ContentType)
+                    {
+                        if (!ContentToggle.ContainsKey(contentType))
+                        {
+                            ContentToggle.Add(contentType, true);
+                        }
+
+                        if (!ContentCircleColor.ContainsKey(contentType))
+                        {
+                            ContentCircleColor.Add(contentType, Color.White);
+                        }
+                    }
                 }
             }
             else
             {
-                File.Create(Path.Combine(settingsPath, "StateSettings.json"));
+                using (var fs = File.Create(settingsFilePath))
+                {
+                    //Created StateSettings.json, disposing stream
+                }
             }
         }
 
         public void Save()
         {
-            if (File.Exists(Path.Combine(settingsPath, "StateSettings.json")))
+            string settingsFilePath = Path.Combine(settingsPath, "StateSettings.json");
+
+            if (!File.Exists(settingsFilePath))
             {
-                SerializationApi.Serialize<State>(this, Path.Combine(Path.Combine(settingsPath, "StateSettings.json")));
+                using (var fs = File.Create(settingsFilePath))
+                {
+                    //Created StateSettings.json, disposing stream
+                }
             }
-            else
-            {
-                File.Create(Path.Combine(settingsPath, "StateSettings.json"));
-            }
+
+            SerializationApi.Serialize<State>(this, settingsFilePath);
         }
 
         public void Init()
         {
-            if (!File.Exists(Path.Combine(settingsPath, "StateSettings.json")))
-            {
-                File.Create(Path.Combine(settingsPath, "StateSettings.json"));
+            string settingsFilePath = Path.Combine(settingsPath, "StateSettings.json");
 
-                SerializationApi.Serialize<State>(this, Path.Combine(Path.Combine(settingsPath, "StateSettings.json")));
+            if (!File.Exists(settingsFilePath))
+            {
+                using (var fs = File.Create(settingsFilePath))
+                {
+                    //Created StateSettings.json, disposing stream
+                }
+                SerializationApi.Serialize<State>(this, settingsFilePath);
             }
 
-            var obj = SerializationApi.Deserialize<State>(Path.Combine(settingsPath, "StateSettings.json"));
+            var obj = SerializationApi.Deserialize<State>(settingsFilePath);
             if (obj != null)
             {
                 if (obj.ContentSettings.Count < (Content.ContentType.Count()))
@@ -181,7 +211,30 @@ namespace cOverlay
                         }
                     }
                 }
-                SerializationApi.Serialize<State>(obj, Path.Combine(Path.Combine(settingsPath, "StateSettings.json")));
+
+                foreach (var contentType in Content.ContentType)
+                {
+                    if (!obj.ContentToggle.ContainsKey(contentType))
+                    {
+                        obj.ContentToggle.Add(contentType, true);
+                    }
+
+                    if (!obj.ContentCircleColor.ContainsKey(contentType))
+                    {
+                        obj.ContentCircleColor.Add(contentType, Color.White);
+                    }
+                }
+
+                SerializationApi.Serialize<State>(obj, settingsFilePath);
+            }
+            else
+            {
+                foreach (var contentType in Content.ContentType)
+                {
+                    ContentToggle.Add(contentType, true);
+                    ContentCircleColor.Add(contentType, Color.White);
+                }
+                SerializationApi.Serialize<State>(this, settingsFilePath);
             }
         }
     }

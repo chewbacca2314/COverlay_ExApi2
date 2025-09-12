@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -7,6 +8,7 @@ using ExileCore2.PoEMemory.Elements.AtlasElements;
 using ExileCore2.PoEMemory.MemoryObjects;
 using ExileCore2.Shared;
 using GameOffsets2.Native;
+using Microsoft.VisualBasic.Logging;
 using RectangleF = ExileCore2.Shared.RectangleF;
 using Vector2 = System.Numerics.Vector2;
 
@@ -34,6 +36,27 @@ namespace cOverlay
             atlasPanel = GameController.IngameState.IngameUi.WorldMap.AtlasPanel;
 
             return true;
+        }
+        private Color GenerateAreaColor(string areaName)
+        {
+            //Base color: #EEDC31 (238, 220, 49) - golden yellow
+            //#794D14 (121, 77, 20) - dark brown
+
+            var baseR = 121;
+            var baseG = 77;
+            var baseB = 20;
+            var baseA = 238; //Alpha
+
+            //Generate hash for area name
+            var hash = areaName.GetHashCode();
+            var variation = Math.Abs(hash % 60) - 30;
+
+            //Apply variations to RGB based on hash
+            var r = Math.Max(0, Math.Min(255, baseR + variation));
+            var g = Math.Max(0, Math.Min(255, baseG + variation));
+            var b = Math.Max(0, Math.Min(255, baseB + variation));
+
+            return Color.FromArgb(baseA, r, g, b);
         }
 
         public override void AreaChange(AreaInstance area)
@@ -118,7 +141,7 @@ namespace cOverlay
 
                                 if (!state.NodeColors.ContainsKey(node.Element.Area.Name))
                                 {
-                                    state.NodeColors.Add(node.Element.Area.Name, Color.Blue);
+                                    state.NodeColors.Add(node.Element.Area.Name, GenerateAreaColor(node.Element.Area.Name));
                                     state.Save();
                                     state.Load();
                                 }
@@ -144,7 +167,8 @@ namespace cOverlay
 
                     swRun.Restart();
                 }
-            } else
+            }
+            else
             {
                 counter = 0;
             }
@@ -213,8 +237,13 @@ namespace cOverlay
                     var node = nodeObject.NodeObject.Element;
                     if (!IsTower(node))
                     {
+                        if (IsCorruptedNexus(nodeObject.NodeObject.Element) && state.ToggleCorruptedNexus)
+                        {
+                            Graphics.DrawTextWithBackground("Corrupted Nexus", new Vector2(node.Center.X, node.Center.Y - 30), Color.Red, ExileCore2.Shared.Enums.FontAlign.Center | ExileCore2.Shared.Enums.FontAlign.VerticalCenter, Color.Black);
+                        }
                         if ((nodeObject.TowersCount >= state.HighTowerAmountThreshold ||
-                            (IsCleansed(nodeObject.NodeObject.Element) || nodeObject.NodeObject.Element.IsCorrupted) 
+                            (IsCleansed(nodeObject.NodeObject.Element) || // This should work now
+                            nodeObject.NodeObject.Element.IsCorrupted)
                             && nodeObject.TowersCount >= state.HighTowerAmountThreshold - 1
                             && state.ToggleCorruptedMaps)
                             && !nodeObject.NodeObject.Element.IsVisited)
@@ -225,6 +254,10 @@ namespace cOverlay
                         }
                         else
                         {
+                            if (state.ShowAllMapContent)
+                            {
+                                DrawContent(node);
+                            }
                             DrawNodeTrash(node);
                         }
 
@@ -288,13 +321,16 @@ namespace cOverlay
                 /*node.Content.Any(x => x.Name == "Irradiated" || x.Name == "Map Boss" && node.IsCorrupted) ? Color.White : state.NodeColors[node.Area.Name]*/,
                 rounding);
 
+            var baseTextColor = _node.AffectedTowersCount == _node.TowersCount && state.RecolorHighTowersAmount ? state.HighTowerAmountColorTxt : state.NameColors[node.Area.Name];
+            Color finalTextColor = node.CanTraverse ? baseTextColor : Color.FromArgb(state.traversalTransparency, baseTextColor);
+
             var areaColor = _node.AffectedTowersCount == _node.TowersCount ? state.HighTowerAmountColorTxt : state.NameColors[node.Area.Name];
             Color transparentColor = Color.FromArgb(state.traversalTransparency, areaColor);
 
             Graphics.DrawText(
                 resultText,
                 backgroundRect.Center,
-                node.CanTraverse ? areaColor : transparentColor,
+                finalTextColor,
                 //node.Content.Any(x => x.Name == "Irradiated" || x.Name == "Map Boss" && node.IsCorrupted) ? Color.Black : state.DrawTextSameColor ? state.AreaTextColor : state.NameColors[node.Area.Name],
                 ExileCore2.Shared.Enums.FontAlign.VerticalCenter | ExileCore2.Shared.Enums.FontAlign.Center);
 
@@ -332,6 +368,16 @@ namespace cOverlay
                     counter++;
                 }
 
+                if (state.ToggleGemling && IsCorruptedNexus(node))
+                {
+                    Graphics.DrawCircle(
+                        new Vector2(node.Center.X, node.Center.Y),
+                        state.NodeRadius + state.GapRadius + (float)(counter * state.ContentCircleThickness),
+                        Color.Red,
+                        state.ContentCircleThickness, 20);
+                    counter++;
+                }
+
                 foreach (var content in nodeContent)
                 {
                     // Ensure content keys exist in dictionaries before accessing them
@@ -341,7 +387,7 @@ namespace cOverlay
                     }
                     if (!state.ContentToggle.ContainsKey(content.Name))
                     {
-                        state.ContentToggle.Add(content.Name, false);
+                        state.ContentToggle.Add(content.Name, true);
                     }
 
                     if (contentSw.ElapsedMilliseconds > 10000)
@@ -433,7 +479,7 @@ namespace cOverlay
                     resultText += $"content: {content.Name}";
                     counter++;
                 }
-                resultText += $"\n{IsCleansed(node.NodeObject.Element)}";
+                resultText += $"\ncleansed: {IsCleansed(node.NodeObject.Element)}\nnexus: {IsCorruptedNexus(node.NodeObject.Element)}";
             }
             Graphics.DrawTextWithBackground(
                     resultText,
@@ -450,6 +496,30 @@ namespace cOverlay
                 result = true;
             }
             return result;
+        }
+        public bool IsCorruptedNexus(AtlasPanelNode node)
+        {
+            if (state.ToggleCorruptedNexus == false) return false;
+            try
+            {
+                //Used for debugging, will log all found texture names
+                /*
+                foreach (var child in node.GetChildAtIndex(0).Children)
+                {
+                    if (!string.IsNullOrEmpty(child.TextureName))
+                    {
+                        LogMessage($"Found texture: {child.TextureName}");
+                        if (child.TextureName.Contains("CorruptionNexus"))
+                            return true;
+                    }
+                } */
+                return node.GetChildAtIndex(0).Children.Any(x => x.Children.Any(y => y.TextureName.Contains("CorruptionNexus") == true));
+            }
+            catch
+            {
+                LogError($"Error checking for Corrupted Nexus");
+            }
+            return false;
         }
         public void DrawConnections(Node node)
         {

@@ -63,9 +63,9 @@ namespace cOverlay
             HelpMarker("How often new segments of atlas are updated. Default: 5000");
             ImGui.SliderInt("Screen refresh rate", ref state.screnRefreshRate, 100, 1000);
             HelpMarker("How often nodes on screen are updated. Default: 500");
-            ImGui.SliderInt("BorderX", ref state.borderX, 500, 2500);
+            ImGui.SliderInt("BorderX", ref state.borderX, 500, 5000);
             HelpMarker("X coordinate (from screen) bound where nodes are updated. Default: 1920");
-            ImGui.SliderInt("BorderY", ref state.borderY, 500, 1400);
+            ImGui.SliderInt("BorderY", ref state.borderY, 500, 5000);
             HelpMarker("Y coordinate (from screen) bound where nodes are updated. Default: 1080");
         }
 
@@ -95,6 +95,8 @@ namespace cOverlay
 
             ImGui.SeparatorText("Area text settings");
             ImGui.Checkbox("Enable corrupted maps counter (-1 of high towers amount)", ref state.ToggleCorruptedMaps);
+            ImGui.Checkbox("Show Corrupted Nexus", ref state.ToggleCorruptedNexus);
+            ImGui.Checkbox("Show all map content (ignore tower treshold)", ref state.ShowAllMapContent);
             ImGui.Checkbox("Recolor high towers amount", ref state.RecolorHighTowersAmount);
             ImGui.Checkbox("Draw towers range", ref state.DrawTowerRange);
             ImGui.Checkbox("Show towers amount after name [1/5]", ref state.showTowersAtName);
