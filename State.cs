@@ -19,22 +19,31 @@ namespace cOverlay
         {
             // Fetch plugin path
             string pluginPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
-            DirectoryInfo currentDir = new DirectoryInfo(Path.GetDirectoryName(pluginPath));
             
-            // Fetch project root path
-            DirectoryInfo projectRoot = currentDir.Parent?.Parent?.Parent;
-            
-            if (projectRoot != null && projectRoot.Exists)
+            // Check if pluginPath is null or empty
+            if (!string.IsNullOrEmpty(pluginPath))
             {
-                string configPath = Path.Combine(projectRoot.FullName, "config", "cOverlay");
-                
-                // Ensure the config directory exists
-                if (!Directory.Exists(configPath))
+                string directoryName = Path.GetDirectoryName(pluginPath);
+                if (!string.IsNullOrEmpty(directoryName))
                 {
-                    Directory.CreateDirectory(configPath);
+                    DirectoryInfo currentDir = new DirectoryInfo(directoryName);
+                    
+                    // Fetch project root path
+                    DirectoryInfo projectRoot = currentDir.Parent?.Parent?.Parent;
+                    
+                    if (projectRoot != null && projectRoot.Exists)
+                    {
+                        string configPath = Path.Combine(projectRoot.FullName, "config", "cOverlay");
+                        
+                        // Ensure the config directory exists
+                        if (!Directory.Exists(configPath))
+                        {
+                            Directory.CreateDirectory(configPath);
+                        }
+                        
+                        return configPath;
+                    }
                 }
-                
-                return configPath;
             }
             
             // Fallback to relative config dir
