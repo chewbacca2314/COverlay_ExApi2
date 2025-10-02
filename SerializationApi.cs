@@ -16,7 +16,7 @@ namespace cOverlay
         public static void Serialize<T>(T settings, string key)
         {
             string directoryPath = Path.GetDirectoryName(key);
-            if (!Directory.Exists(directoryPath))
+            if (!string.IsNullOrEmpty(directoryPath) && !Directory.Exists(directoryPath))
             {
                 Directory.CreateDirectory(directoryPath);
             }
